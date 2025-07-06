@@ -1,0 +1,26 @@
+{
+  "latex-workshop.formatting.latex": "latexindent",
+  "latex-workshop.synctex.afterBuild.enabled": true,
+  "latex-workshop.hover.command.enabled": true,
+  "[latex][markdown]": {
+    "editor.rulers": [
+      80
+    ],
+    "rewrap.wrappingColumn": 80
+  },
+  "ltex.enabled": true,
+  "ltex.latex.commands": {
+    "\\label{}": "ignore",
+    "\\documentclass[]{}": "ignore",
+    "\\cite{}": "dummy",
+    "\\cite[]{}": "dummy",
+    "\\SI{}{}": "dummy",
+    "\\frac{}{}": "dummy",
+    "\\dfrac{}{}": "dummy",
+    "\\draw[]": "ignore",
+    "\\faStepForward": "dummy",
+    "\\faStepBackward": "dummy"
+  },
+  "rewrap.autoWrap.enabled": true,
+  "editor.tabCompletion": "onlySnippets"
+}

@@ -1,0 +1,14 @@
+## Core latex/pdflatex auxiliary files:
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+
+# Bibliogrpahy artifacts
+
+*.bbl
+*.bcf
+*.blg
+*.run.xml

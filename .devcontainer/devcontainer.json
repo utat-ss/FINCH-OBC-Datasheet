@@ -1,0 +1,24 @@
+{
+  "name": "FINCH OBC Datasheet devcontainer",
+  "dockerFile": "Dockerfile",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.profiles.linux": {
+          "zsh": {
+            "path": "zsh",
+            "args": [
+              "--login"
+            ]
+          }
+        },
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      },
+      "extensions": [
+        "James-Yu.latex-workshop",
+        "valentjn.vscode-ltex",
+        "yzhang.markdown-all-in-one"
+      ]
+    }
+  },
+}
