@@ -5,7 +5,7 @@
 % Options here are passed to the article class.
 % Most common options: 10pt, 11pt, 12pt
 
-\documentclass[10pt]{datasheet}
+\documentclass[10pt]{../datasheet}
 
 % Input encoding and typographical rules for English language
 \usepackage[utf8]{inputenc}
@@ -24,8 +24,8 @@
 \author{UTAT Space Systems}
 \date{May 2025}
 \revision{Revision 1}
-\companylogo{\includegraphics[scale=0.022]{figures/utat_ss.png}}
-\input{preamble}
+\companylogo{\includegraphics[scale=0.022]{../figures/utat_ss.png}}
+\input{../preamble}
 \begin{document}
 \maketitle
 
@@ -80,7 +80,7 @@ You can build the PDF document using command \texttt{latexmk -pdf}.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=0.95\linewidth]{figures/OBC_SS.png}
+  \includegraphics[width=0.95\linewidth]{../figures/OBC_SS.png}
   \caption{\centering OBC v1.2}
   \label{fig:enter-label}
 \end{figure}
