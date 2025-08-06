@@ -1,6 +1,7 @@
 {
   "name": "FINCH OBC Datasheet devcontainer",
   "dockerFile": "Dockerfile",
+  "postStartCommand": "bash -c '.devcontainer/scripts/post-start.sh ${containerWorkspaceFolder}'",
   "customizations": {
     "vscode": {
       "settings": {
