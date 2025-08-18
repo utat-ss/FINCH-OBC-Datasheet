@@ -145,6 +145,16 @@
 	\maketitle
 	
 	\tableofcontents
+
+    \section{Revision History}
+
+    \begin{table}[H]\centering
+        \begin{tabular}{| p{0.2\linewidth} | p{0.2\linewidth} | p{0.5\linewidth} |} \hline
+        \b{Revision / Date} & \b{Author} & \b{Change Log} \\ \hline
+        v1.0 / Aug. 8, 2025 & Coby Silayan & First release \\ \hline
+        \end{tabular}
+    \end{table}
+
     \thispagestyle{empty}
 	
 	\newpage
@@ -173,6 +183,13 @@
     the electrical design, as well as methods to store the datacube. 
     
     \subsection{The Hardware We're Working With}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.98\linewidth]{../figures/PAY_v1_0_blockdiagram.png}
+        \caption{PAY v1.0 Block Diagram}
+    \end{figure}
+
+
     \subsubsection{STM32H743IIT6}
     \begin{figure}[H]
         \centering
@@ -195,7 +212,7 @@
             & I2C \\
             & SPI \\
             & SDMMC \\
-            & HDMI \\ \hline
+            & DCMI \\ \hline
             Package & LQFP-176\\ 
         \end{tabular}
         \caption{STM32H743IIT6 Relevant Electrical Specifications}
@@ -208,13 +225,13 @@
             \centering
             \includegraphics[width=1\textwidth]{../figures/tau_ss.png}
             \caption{\centering FLIR Tau SWIR}
-            \label{fig:left_fig}
+            \label{fig:tau_swir}
         \end{minipage}
         \begin{minipage}{0.4\linewidth}
             \centering
             \includegraphics[width=1\textwidth]{../figures/tau_conn_ss.png}
             \caption{\centering FLIR Tau Connector}
-            \label{fig:right_fig}
+            \label{fig:tau_conn}
         \end{minipage}
     \end{figure}
 
@@ -241,6 +258,23 @@
     will not be suitable for the FINCH mission since imaging would last to the 
     order of 30s. 
 
+    The amount of storage needed for a single image is 
+    \begin{equation}\label{eqn:image_size}
+        \frac{256\times320\times16 \text{bits}}{8 \text{bits/byte}} = 163.84\text{kBytes}
+    \end{equation}
+    Note that despite the camera being 14-bit, 16-bit is used for the calculation 
+    since 2 bytes will be used to store each pixel. This is just simpler on the firmware side. 
+    For seamless data transfer, the data transfer speed should be such that an image 
+    is saved to memory in the amount of time it takes to readout a frame. 
+    \begin{equation}\label{eqn:trans_time}
+        \frac{\text{Image Size}}{\text{Readout Time}} \approx 11.12 \text{MBytes/s}
+    \end{equation}
+
+    As a rough estimate for the size of a datacube, assume 60fps for 30s. 
+    \begin{equation}
+        163.84\text{kBytes} \times 60 \times 30 = 294.912 \text{MBytes}
+    \end{equation}
+
     \begin{table}[H]\centering
         \begin{tabular}{l | l}
             Resolution & 512x640 pixels \\
@@ -261,16 +295,19 @@
 
     \subsubsection{Spartan 6 FPGA}
     Yes, there is an FPGA onboard. Initially, the FPGA was on the board for compression 
-    which recently became a "Should" requirement. 
+    which recently became a "Should" requirement. Currently, the only pins broken out of 
+    the FPGA are the QSPI lines to the STM32H7. The FPGA does not have any connection to 
+    the camera. 
 
-
-
+    \newpage
     \section{Applicable Documents and Standards}\label{sec:methods}
     \subsection{General Documents}
     \begin{itemize}
-        \item PAY Datasheet
+        \item STM32H742xI/G STM32H743xI/G Datasheet
         \item Master Connection Sheet
         \item \cite{TAU_ProdSpec}
+        \item \cite{TAU_SDD}
+        \item \cite{TAU_UserGuide}
     \end{itemize}
     \subsection{Specifications, Standards, and Handbooks}
     \begin{itemize}
@@ -301,16 +338,14 @@
     \end{table}
     
     \subsection{PAY Requirements}
-Figure \ref{fig:PAY_req_tree} and Table \ref{tab:pay_reqs}
-summarize the requirements for the Payload Controller system. 
 
 Notable is the compression requirement which has only become a "should" recently after PAY was designed. The reason why the requirement suddenly became a "should" comes from a spec from optics saying that the whole sensor will not be used. Initial requirement for compression assumed the whole sensor would be used. 
-    \begin{figure}[H]
-        \centering
-        \includegraphics[width=1\linewidth]{../figures/PAY_req_tree.png}
-        \caption{PAY Requirement Tree}
-        \label{fig:PAY_req_tree}
-    \end{figure}
+    %\begin{figure}[H]
+    %    \centering
+    %    \includegraphics[width=1\linewidth]{../figures/PAY_req_tree.png}
+    %    \caption{PAY Requirement Tree}
+    %    \label{fig:PAY_req_tree}
+    %\end{figure}
 
     \begin{table}[H]
         \centering
@@ -341,6 +376,29 @@ Notable is the compression requirement which has only become a "should" recently
 
 
     \section{High Level System Architecture}
+    \subsection{Block Diagram}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.98\linewidth]{../figures/PAY_v1_0_blockdiagram.png}
+        \caption{PAY v1.0 Block Diagram}
+    \end{figure}
+    \subsection{Connection to the Rest of the Spacecraft}
+    PAY talks to the rest of the spacecraft via the CAN bus. Fortunately, the STM32H7 
+    has native CAN support so all that is needed for CAN communication is the CAN 
+    transceiver. As with other electronic systems on the spacecraft, PAY will also be 
+    a node on the Cubesat Space Protocol.
+
+    CAN is also used to talk to the RF Satlab SRS4 transceiver. However, RS422 is used for faster 
+    data transfer to the SRS4. 
+    \subsection{Power}
+    PAY simply accepts 3V3 from the bus. With the previous mechanical layout of 
+    boards, this was fine. However, there might be a harness of non-negligible 
+    length that will provide power to PAY and OBC. Consequently, end-point conversion 
+    might now be necessary. 
+
+    Within the board, there is also 1V8 via a buck converter which is supplied to 
+    the FPGA as an intermediate voltage. There is another 1V8 via an LDO which is 
+    supplied to the SD card if it is run at UHS mode. 
     \subsection{Grounding Scheme}
     The initial grounding scheme before the payload redesign was a Star grounding 
     scheme. This was easy since the boards were just stacked together and then 
@@ -348,12 +406,87 @@ Notable is the compression requirement which has only become a "should" recently
     the EPS board will be separate from the rest of the boards. 
 
     \section{Detailed System Architecture}\label{sec:Det_Sys_Arc}
+    \subsection{SD Cards}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.98\linewidth]{../figures/SD_schematic_annotated.png}
+        \caption{SD Card Schematic}
+    \end{figure}
+
+    The SD card portion was designed so that both SDMMC interfaces of the H7 could 
+    be used. The reason is not for redundancy-- if one SDMMC failed, probably the whole 
+    chip failed. Rather, it is because the two SDMMC's are different. Quoting Reid when 
+    he designed the board: Critically, SDMMC1 has direction pins, which can tell 
+    the voltage translator which direction data is flowing. Without these pins, 
+    you must rely on auto-direction sensing which can be finicky. The old plan
+     was to use the STM32H743ZI, which only supported SDMMC2 while using the DCMI peripheral,
+      but we’ve decided to use the higher-pinned STM32H743II which allows for the coexistence of both peripherals.
+    However, for timeline safety, I will be implementing both methods in the hopes that at least one will work. 
+
+    An important thing to note are the different modes for the SDMMC protocol 
+    which enable faster transfers shown in Figure \ref{fig:SDMMC_bus_spe}. Given the 
+    calculation for the required data transfer speed in Eq. \eqref{eqn:trans_time}, 
+    going to UHS may not be necessary. 
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.98\linewidth]{../figures/SDMMC_bus_speeds.png}
+        \caption{SDMMC Modes}
+        \label{fig:SDMMC_bus_spe}
+    \end{figure}
+
+
+    \subsection{Image Transfer Method}
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.98\linewidth]{../figures/PAY_transfer_seq.png}
+        \caption{Image Transfer Sequence}
+        \label{fig:PAY_tra_seq}
+    \end{figure}
+
+    Figure \ref{fig:PAY_tra_seq} depicts the image transfer sequence and Figure 
+    \ref{fig:SDMMC_blo_dia} shows the block diagram for the SDMMC peripheral. 
+    The images from the DCMI peripheral are first written to the IDMA portion on the SRAM 
+    that will be allocated the transfer processs. From \eqref{eqn:image_size}, around 163kB of 
+    memory is needed. This requirement makes SDMMC1 easier than SDMMC2 to use. From Figure 2 on 
+    the STM32H7 Datasheet\footcite{H7_DS}, while SDMMC1 has access to 512kB of contiguous SRAM, 
+    SDMMC2 has access to 2x 128kB + 32kB of SRAM. SDMMC2 could still work but it would be less 
+    convenient. 
+
+    The image data is then streamed from the SRAM into the FIFO via the 64-bit AXI bus. 
+    It is the FIFO that then pushes the data onto the SDMMC line and to the SD card. 
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.98\linewidth]{../figures/SDMMC_block_diagram.png}
+        \caption{SDMMC Block Diagram\footcite{H7_SDMMC_ref}}
+        \label{fig:SDMMC_blo_dia}
+    \end{figure}
+
 
     \section{Possible Risks}
+    The firmware uses the ZephyrRTOS. It has its strengths but using SDMMC with it 
+    does not seem to be too trivial as there is no native support. 
+
+    Development will target the use of HS mode. A risk is that the firmware may not 
+    reach the necessary transfer speeds. This seems like a low risk. 
 
     \section{Development Schedule and Status}
 
+    Early summer 2025: verified that the H7 could be programmed. 
+
+    July 19, 2025: Zephyr was flashed on PAY and ran on HSE. Recorded a current 
+    draw of 172mA running the program at 480MHz. 
+    
+
     \section{Open Issues and Future Work}
+
+    \begin{itemize}
+        \item Current draw seems high for nominal operation. Will be good to explore low power modes of the H7. 
+        \item Actually saving an image to the SD card
+        \item Integration with OBC once CAN is brought up and a CSP node has been programmed onto the H7. 
+    \end{itemize}
+
 
     \printbibliography
     
