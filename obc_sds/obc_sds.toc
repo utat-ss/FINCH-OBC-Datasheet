@@ -1,0 +1,16 @@
+\contentsline {section}{\numberline {1}Subteam Overview}{1}{section.1}%
+\contentsline {subsection}{\numberline {1.1}Technical Responsibilities}{1}{subsection.1.1}%
+\contentsline {subsection}{\numberline {1.2}Other Responsibilities}{1}{subsection.1.2}%
+\contentsline {section}{\numberline {2}Applicable Documents and Standards}{1}{section.2}%
+\contentsline {subsection}{\numberline {2.1}Technical Documents}{1}{subsection.2.1}%
+\contentsline {subsection}{\numberline {2.2}Standards Documents}{1}{subsection.2.2}%
+\contentsline {section}{\numberline {3}Subsystem Requirements}{1}{section.3}%
+\contentsline {subsection}{\numberline {3.1}Electrical System Requirements}{1}{subsection.3.1}%
+\contentsline {subsection}{\numberline {3.2}OBC Requirements}{3}{subsection.3.2}%
+\contentsline {subsection}{\numberline {3.3}PAY Requirements}{4}{subsection.3.3}%
+\contentsline {section}{\numberline {4}Verification and Validation Plan}{6}{section.4}%
+\contentsline {section}{\numberline {5}High Level System Architecture}{7}{section.5}%
+\contentsline {section}{\numberline {6}Detailed System Architecture}{7}{section.6}%
+\contentsline {section}{\numberline {7}Possible Risks}{7}{section.7}%
+\contentsline {section}{\numberline {8}Development Schedule and Status}{7}{section.8}%
+\contentsline {section}{\numberline {9}Open Issues and Future Work}{7}{section.9}%
