@@ -16,6 +16,7 @@ ARG TL2026_ISO_SHA512="4a9071bb567c3bdd6443378dedc8e485aea4a2f1203ec8ed7c17f6787
 RUN cd /tmp && wget ${TL2026_ISO_URL} --quiet --show-progress --progress=bar:force:noscroll
 RUN cd /tmp && echo ${TL2026_ISO_SHA512} | sha512sum -c
 RUN cd /tmp && osirrox -indev ${TL2026_ISO_NAME} -extract / /tmp/texlive2026
+RUN cd /tmp && rm ${TL2026_ISO_NAME}
 RUN cd /tmp/texlive2026 && bash -c "echo 'I' | ./install-tl"
 
 # main stage
