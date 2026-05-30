@@ -1,25 +1,57 @@
-FROM debian:buster
+FROM public.ecr.aws/lts/ubuntu:22.04_stable
 
-# practical minimum
-RUN apt-get update && apt-get install -y make build-essential git zsh vim curl wget procps
-RUN sh -c "$(wget -O- https://github.com/deluan/zsh-in-docker/releases/download/v1.1.2/zsh-in-docker.sh)" -- \
-    -t robbyrussell -p git -p ssh-agent
+ARG DEBIAN_FRONTEND=noninteractive
+ARG KEYRING_PATH=/usr/share/keyrings
+ARG APT_SOURCES_PATH=/etc/apt/sources.list.d
 
-# install tex live 2025
-ARG TL2025_ISO_URL=https://ca.mirrors.cicku.me/ctan/systems/texlive/Images/texlive2025.iso
-ARG TL2025_ISO_SHA512="1fd9a2234d086f50c832ab3ac8b83477bbc39b1138a3c4a2351244c1fd4b8bea6d1ac81d4a5b0cba95f2e82c00f0d9df5b33189eb222e4bae5dae1523ef0da0e  texlive2025.iso"
+# update and upgrade
+RUN apt update && apt upgrade -y
 
-RUN apt-get update && apt-get install -y perl-tk cpanminus xorriso
-# RUN wget ${TL2022_ISO_URL} --quiet --show-progress --progress=bar:force:noscroll
-ADD ${TL2025_ISO_URL} /texlive2025.iso
-RUN echo ${TL2025_ISO_SHA512} | sha512sum -c
-RUN osirrox -indev texlive2025.iso -extract / /tmp/texlive2025
-RUN cd /tmp/texlive2025 && bash -c "echo 'I' | ./install-tl"
+# install essentialls
+RUN apt update && \
+    apt install -y \
+    man make build-essential cmake ninja-build git zsh vim curl wget procps gnupg gnupg2 ca-certificates zip \
+    software-properties-common
 
-ENV PATH="$PATH:/usr/local/texlive/2025/bin/x86_64-linux"
+# unminimize the system
+RUN bash -c "yes | unminimize"
 
-RUN rm /texlive2025.iso
-RUN rm -rf /tmp/texlive2025
+# create dev sudo user
+RUN useradd --create-home dev && \
+    usermod --append --groups sudo dev && \
+    apt update && apt install -y sudo && \
+    echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
+# install dumb init system
+USER root
+RUN apt update && apt install -y dumb-init
+
+# setup oh-my-zsh
+USER dev
+ARG DOCKER_OHMYZSH_SCRIPT_NAME=zsh-in-docker.sh
+ARG DOCKER_OHMYZSH_SCRIPT_URL=https://github.com/deluan/zsh-in-docker/releases/download/v1.1.3/${DOCKER_OHMYZSH_SCRIPT_NAME}
+ARG DOCKER_OHMYZSH_SCRIPT_HASH="ffa8175332ef01b500ace59d03ce7e2f3a7453651e9a37060974bb6536f0706b  ${DOCKER_OHMYZSH_SCRIPT_NAME}"
+RUN cd /tmp && \
+    wget ${DOCKER_OHMYZSH_SCRIPT_URL} && \
+    echo ${DOCKER_OHMYZSH_SCRIPT_HASH} | sha256sum -c && \
+    chmod +x ./${DOCKER_OHMYZSH_SCRIPT_NAME} && \
+    ./${DOCKER_OHMYZSH_SCRIPT_NAME} -t robbyrussell -p git -p ssh-agent && \
+    rm ./${DOCKER_OHMYZSH_SCRIPT_NAME}
+
+# install tex live 2026
+USER dev
+ARG TL2026_ISO_NAME=texlive2026-20260301.iso
+ARG TL2026_ISO_URL=https://ca.mirrors.cicku.me/ctan/systems/texlive/Images/${TL2026_ISO_NAME}
+ARG TL2026_ISO_SHA512="4a9071bb567c3bdd6443378dedc8e485aea4a2f1203ec8ed7c17f6787093b9c37636a037032c0be63352e3d0bf98cf5616dab19fdcd7cb83f766b3e085b620ff  ${TL2026_ISO_NAME}"
+RUN sudo apt-get update && sudo apt-get install -y perl-tk cpanminus xorriso
+RUN cd /tmp && wget ${TL2026_ISO_URL} --quiet --show-progress --progress=bar:force:noscroll
+RUN cd /tmp && echo ${TL2026_ISO_SHA512} | sha512sum -c
+RUN cd /tmp && osirrox -indev ${TL2026_ISO_NAME} -extract / /tmp/texlive2026
+RUN cd /tmp/texlive2026 && bash -c "echo 'I' | sudo ./install-tl"
+RUN cd /tmp && rm ${TL2026_ISO_NAME} && rm -rf /tmp/texlive2026
+ENV PATH="$PATH:/usr/local/texlive/2026/bin/x86_64-linux"
 
 # fix latexindent.pl
-RUN cpanm YAML::Tiny Unicode::GCString File::HomeDir
+RUN sudo cpanm YAML::Tiny Unicode::GCString File::HomeDir
+
+ENTRYPOINT ["/usr/bin/dumb-init", "--"]
