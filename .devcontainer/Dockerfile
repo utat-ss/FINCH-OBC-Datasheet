@@ -35,9 +35,6 @@ RUN apt update && \
     man make build-essential cmake ninja-build git zsh vim curl wget procps gnupg gnupg2 ca-certificates zip \
     software-properties-common perl-tk cpanminus
 
-# unminimize the system
-RUN bash -c "yes | unminimize"
-
 # create dev sudo user
 RUN useradd --create-home dev && \
     usermod --append --groups sudo dev && \
