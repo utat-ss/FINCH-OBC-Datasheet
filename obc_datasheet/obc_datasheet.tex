@@ -18,14 +18,26 @@
 \usepackage{pgfplots}
 \usepackage{circuitikz}
 \usetikzlibrary{calc}
+% Load Lua helper only when compiling with LuaTeX; otherwise provide a fallback
+\ifdefined\directlua
+  % We're in LuaTeX: load the helper
+  \usepackage{luacode}
+  \input{../netlists/netlisthelper.tex}
+\else
+  % Not LuaTeX: provide a harmless fallback macro so pdflatex runs cleanly
+  \newcommand{\includenetlistdiagram}[2]{%
+    \textbf{Netlist diagram requires compiling with LuaLaTeX (use lualatex).}%
+  }
+\fi
 
 % These define global texts that are used in headers and titles.
 \title{OBC v1.2 Datasheet}
 \author{UTAT Space Systems}
-\date{May 2025}
+\date{June 2026}
 \revision{Revision 1}
 \companylogo{\includegraphics[scale=0.022]{../figures/utat_ss.png}}
 \input{../preamble}
+% (netlist helper is loaded conditionally above)
 \begin{document}
 \maketitle
 
@@ -59,25 +71,6 @@ You can build the PDF document using command \texttt{latexmk -pdf}.
 % Switch to next column
 \vfill\break
 
-% \begin{figure}[h]
-%     \begin{circuitikz}[european]
-%         \node[op amp] (amp1) {};
-%         \node[op amp, below = 0.5cm, xscale = -1] (amp2) {};
-%         \draw (amp1.out) |- (amp2.-);
-%         \draw (amp2.-) ++(0, 0.3cm) node[circ]{} to +(2,0) node[above left]{5};
-%         \draw (amp2.out) to (amp1.+);
-%         \draw (amp1.+) ++(0, -0.3cm) node[circ]{} to +(-2,0) node[above right]{2};
-%         \draw (amp1.-) to +(-2,0) node[above right]{1};
-%         \draw (amp2.+) to +(2,0) node[above left]{4};
-%         \draw (amp1.out) +(0,0.5cm) node (Vdd) {$\mathrm{V_{DD}}$};
-%         \draw (Vdd.east) to +(1.5,0) node [above left]{6};
-%         \draw (amp2.out) +(0,-0.5cm) node (Vss) {$\mathrm{V_{SS}}$};
-%         \draw (Vss.west) to +(-1.6,0) node [above right]{3};
-%         \draw ($(amp1.north west) + (-0.5,0.5)$) rectangle ($(amp2.south west) + (0.5,-0.5)$);
-%     \end{circuitikz}
-%     \caption{Pinout and internal circuit}
-% \end{figure}
-
 \begin{figure}[H]
   \centering
   \includegraphics[width=0.95\linewidth]{../figures/OBC_SS.png}
@@ -89,6 +82,47 @@ You can build the PDF document using command \texttt{latexmk -pdf}.
 % page-by-page.
 \onecolumn
 \section{Block Diagram}
+
+Below is the block diagram that represents th high-level specification of the
+On-Board Computer.
+
+\begin{figure}[h]
+  \centering
+  \begin{tikzpicture}[>=latex, every node/.style={font=\small}]
+    % MCU centered block
+    \node[draw, rectangle, minimum width=3.2cm, minimum height=2.2cm, align=center] (mcu) {MCU\\STM32G431RBT6};
+    
+    % Tall bus block on the right (moved further right to allow label)
+    \node[draw, rectangle, minimum width=1.6cm, minimum height=4cm, align=center] (bus) at ($(mcu) + (5.0,0)$) {Bus\\(I2C)};
+    
+    % I2C connection from MCU to bus
+    \draw[->, thick] (mcu.east) -- node[above]{I2C (SDA / SCL)} (bus.west);
+    
+    % Single straight I2C connection
+    % (SDA/SCL noted in the label on the main line)
+  \end{tikzpicture}
+  \caption{Block diagram: MCU and I2C bus}
+\end{figure}
+
+\section{Bus}
+The table below maps the J201 connector pins found in the Protel netlist to
+their net labels.
+
+\begin{longtable}{@{}r l@{}}
+  \hline
+  Pin & Net \\
+  \hline
+  \endfirsthead
+  \hline
+  Pin & Net \\
+  \hline
+  \endhead
+  \hline
+  \endfoot
+  \hline
+  \endlastfoot
+  \getnetlist{../netlists/obs_bus.net}{J201}
+\end{longtable}
 
 \section{RTC}
 

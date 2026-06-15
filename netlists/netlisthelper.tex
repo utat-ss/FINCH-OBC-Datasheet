@@ -1,0 +1,24 @@
+% Netlist helper macros using Lua (requires LuaLaTeX)
+\newcommand{\getnetlist}[2]{%
+  \luaexec{
+    local parser = dofile("../netlists/netlistparser.lua")
+    local function unquote(value)
+      value = tostring(value or "")
+      if value:sub(1, 1) == '"' and value:sub(-1) == '"' then
+        return value:sub(2, -2)
+      end
+      return value
+    end
+    local path = unquote(\luastringN{#1})
+    local ref = unquote(\luastringN{#2})
+    local entries = parser.parse_protel_netlist(path, ref)
+    local bs = string.char(92)
+    if type(entries) ~= "table" then
+      tex.print(bs .. "multicolumn{2}{@{}l@{}}{Error reading netlist}" .. bs .. bs)
+    elseif next(entries) == nil then
+      tex.print(bs .. "multicolumn{2}{@{}l@{}}{No pins found}" .. bs .. bs)
+    else
+      tex.print(parser.render_pin_rows(entries))
+    end
+  }%
+}
